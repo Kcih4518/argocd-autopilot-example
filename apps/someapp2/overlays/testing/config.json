@@ -1,0 +1,10 @@
+{
+  "appName": "someapp2",
+  "userGivenName": "someapp2",
+  "destNamespace": "default",
+  "destServer": "https://kubernetes.default.svc",
+  "srcPath": "apps/someapp2/overlays/testing",
+  "srcRepoURL": "https://github.com/Kcih4518/argocd-autopilot-example.git",
+  "srcTargetRevision": "",
+  "labels": null
+}
