@@ -1,0 +1,91 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  labels:
+    applicationset: "true"
+  name: cloudinfra-166-diatango
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - externalIp: 10.78.26.166
+        fqdn: ""
+        namespace: asus-paas-2
+        path: asus-paas-cloud-notebook-service
+        port: "6443"
+        server: 10.78.26.166
+        values:
+          customize: cloudinfra-ntuh
+          env: staging
+          image: asuscloud:31350/asus-paas-runtime:v1-dev-d4dbcf0d
+          path: /nfsshare/166
+          server: asusnfs
+      - externalIp: 10.78.26.166
+        fqdn: ""
+        namespace: ai-maker
+        path: ai-maker-cloud-cvat-mng
+        port: "6443"
+        server: 10.78.26.166
+        values:
+          customize: cloudinfra-ntuh
+          env: staging
+          image: asuscloud:31350/cloud-cvat-mng:v1-dev-0481e655
+          path: /nfsshare/166
+          server: asusnfs
+  template:
+    metadata:
+      labels:
+        asus-pass-2: "true"
+      name: '{{path}}-166'
+    spec:
+      destination:
+        namespace: '{{namespace}}'
+        server: https://{{server}}:{{port}}
+      source:
+        helm:
+          parameters:
+          - name: database.user
+            value: asusocis
+          - name: database.password
+            value: oc!s2021
+          - name: rabbitmq.user
+            value: nchcaimaker
+          - name: rabbitmq.password
+            value: Oc!s2021
+          - name: cluster.ip
+            value: '{{externalIp}}'
+          - name: k8s.host
+            value: '{{server}}'
+          - name: k8s.port
+            value: '{{port}}'
+          - name: database.host
+            value: asus-paas-psql-db.asus-paas-2.svc.cluster.local
+          - name: rabbitmq.host
+            value: asus-paas-rabbitmq.asus-paas-2.svc.cluster.local
+          - name: asus_paas_runtime.image
+            value: '{{values.image}}'
+          - name: ai_maker_cloud_cvat_mng.image
+            value: '{{values.image}}'
+          - name: asus_paas_runtime.USER_KONG_PLUGIN_JUPYTER_CONFIG.auth_proxy_login_url_with_redirection
+            value: http://{{server}}:31010/
+          - name: asus_paas_runtime.USER_KONG_PLUGIN_JUPYTER_CONFIG.auth_proxy_home_url
+            value: http://{{server}}:31010/user/dashboard
+          - name: asus_paas_runtime.USER_KONG_PLUGIN_JUPYTER_CONFIG.auth_proxy_logout_url
+            value: http://{{server}}:31010/logout
+          - name: fqdn_base
+            value: '{{fqdn}}'
+          - name: customize
+            value: '{{values.customize}}'
+          - name: cluster.env
+            value: '{{values.env}}'
+          - name: volume.nfs.server
+            value: '{{values.server}}'
+        path: cloudinfra/{{path}}
+        repoURL: ssh://git@10.78.26.44:30001/sw_rd_dept4_sec3_diatango/applications.git
+        targetRevision: HEAD
+      syncPolicy:
+        automated:
+          prune: true
+        syncOptions:
+        - CreateNamespace=true
